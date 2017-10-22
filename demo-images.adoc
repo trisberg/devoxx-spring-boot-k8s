@@ -1,6 +1,8 @@
-=== Demo - The Actors Microservice
+=== Demo - The Images Microservice
 
-A Simple REST Repository App for managing Actors
+A Simple REST Repository App for managing Images
+
+NOTE: This is much the same as the Actors app we build previously
 
 ==== Create the app and the config for local testing
 
@@ -9,36 +11,46 @@ A Simple REST Repository App for managing Actors
 ----
 curl https://start.spring.io/starter.zip -d bootVersion=2.0.0.M5 \
     -d dependencies=web,actuator,jpa,data-rest,mysql,hsql \
-    -d groupId=com.springdeveloper.k8s -d artifactId=actors \
-    -d name=actors -d baseDir=actors -o actors.zip
-unzip actors.zip
-cd actors
+    -d groupId=com.springdeveloper.k8s -d artifactId=images \
+    -d name=images -d baseDir=images -o images.zip
+unzip images.zip
+cd images
 ----
 
-. Add an Actor Entity
+. Add an Image Entity
 +
-.Actor.java
+.Image.java
 [source,java]
 ----
-package com.springdeveloper.k8s.actors;
+package com.springdeveloper.k8s.images;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
 @Entity
-public class Actor {
+public class Image {
 
 	@Id
 	@GeneratedValue
 	Long id;
 
+	String url;
+
 	String name;
 
-	int age;
+	int size;
 
 	public Long getId() {
 		return id;
+	}
+
+	public String getUrl() {
+		return url;
+	}
+
+	public void setUrl(String url) {
+		this.url = url;
 	}
 
 	public String getName() {
@@ -49,31 +61,31 @@ public class Actor {
 		this.name = name;
 	}
 
-	public int getAge() {
-		return age;
+	public int getSize() {
+		return size;
 	}
 
-	public void setAge(int age) {
-		this.age = age;
+	public void setSize(int size) {
+		this.size = size;
 	}
 }
 ----
 
-. Add an ActorRepository
+. Add an ImageRepository
 +
-.ActorRepository.java
+.ImageRepository.java
 [source,java]
 ----
-package com.springdeveloper.k8s.actors;
+package com.springdeveloper.k8s.images;
 
 import java.util.List;
 
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.query.Param;
 
-public interface ActorRepository extends PagingAndSortingRepository<Actor, Long> {
+public interface ImageRepository extends PagingAndSortingRepository<Image, Long> {
 
-	List<Actor> findByName(@Param("name") String name);
+	List<Image> findByName(@Param("name") String name);
 
 }
 ----
@@ -94,117 +106,26 @@ spring.datasource.initialize=true
 +
 ----
 ./mvnw clean package
-java -jar target/actors-0.0.1-SNAPSHOT.jar
+java -jar target/images-0.0.1-SNAPSHOT.jar
 ----
 
-. You can add actor records:
+. You can add image records:
 +
 ----
-curl -i -X POST -H "Content-Type:application/json" -d "{  \"name\" : \"Dolph Lundgren\",  \"age\" : 59 }" http://localhost:8080/actors
+curl -i -X POST -H "Content-Type:application/json" -d "{  \"url\" : \"https://www.evolutionary.org/wp-content/uploads/2014/04/Dolph-Lundgren-boxer-197x300.jpg\", \"name\" : \"Dolph Lundgren\",  \"size\" : 13923 }" http://localhost:8080/images
 ----
 
 . Test
 +
 ----
-curl http://localhost:8080/actors | python -m json.tool
-----
-
-==== Create a MySQL database deployment and service
-
-. Configure a MySQL deployment and service
-+
-.mysql/mysql-deployment.yaml
-[source,yaml]
-----
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: mysql
-  labels:
-    app: mysql
-spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: mysql
-    spec:
-      containers:
-      - image: mysql:5.6
-        name: mysql
-        env:
-          - name: MYSQL_ROOT_PASSWORD
-            # You can change this password - if you do change the base64 encoded value in the secrets file
-            value: yourpassword
-        ports:
-          - containerPort: 3306
-            name: mysql
-        volumeMounts:
-          - name: data
-            mountPath: /var/lib/mysql
-      volumes:
-      - name: data
-        persistentVolumeClaim:
-          claimName: mysql
-----
-+
-.mysql/mysql-svc.yaml
-[source,yaml]
-----
-apiVersion: v1
-kind: Service
-metadata:
-  name: mysql
-  labels:
-    app: mysql
-spec:
-  ports:
-    - port: 3306
-  selector:
-    app: mysql
-----
-+
-.mysql/mysql-pvc.yaml
-[source,yaml]
-----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: mysql
-  labels:
-    app: mysql
-  annotations:
-    volume.alpha.kubernetes.io/storage-class: default
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 8Gi
-----
-+
-.mysql/mysql-secrets.yaml
-[source,yaml]
-----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: mysql
-  labels:
-    app: mysql
-data:
-  mysql-root-password: eW91cnBhc3N3b3Jk
-----
-
-. Deploy the MySQL database
-+
-----
-kubectl apply -f ./mysql/
+curl http://localhost:8080/images | python -m json.tool
 ----
 
 ==== Add Kubernetes configuration
 
 . Add config properties for running on Kubernetes
++
+NOTE: We will be using the same MySQL database that the Actors app is using - see link:demo-actors.adoc#create-a-mysql-database-deployment-and-service[Create a MySQL database deployment and service]
 +
 .application-kubernetes.properties
 [source,props]
@@ -222,9 +143,9 @@ spring.datasource.initialize=false
 FROM java:8-alpine
 VOLUME /tmp
 ARG JAR_FILE
-ADD ./target/${JAR_FILE} /actors.jar
-RUN sh -c 'touch /actors.jar'
-ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/actors.jar"]
+ADD ./target/${JAR_FILE} /images.jar
+RUN sh -c 'touch /images.jar'
+ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/images.jar"]
 ----
 +
 .pom.xml
@@ -276,43 +197,43 @@ WARNING: We need to downgrade the Hibernate version. The most recent version thr
 
 . Create the Kubernetes configuration files for the app
 +
-.config/actors-svc.yaml
+.config/images-svc.yaml
 [source,yaml]
 ----
 kind: Service
 apiVersion: v1
 metadata:
-  name: actors
+  name: images
   labels:
-    app: actors
+    app: images
 spec:
   # If you are running k8s on a local dev box or using minikube, you can use type NodePort instead of LoadBalancer
   type: NodePort
   ports:
     - port: 80
   selector:
-    app: actors
+    app: images
 ----
 +
-.config/actors-deployment.yaml
+.config/images-deployment.yaml
 [source,yaml]
 ----
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: actors
+  name: images
   labels:
-    app: actors
+    app: images
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        app: actors
+        app: images
     spec:
       containers:
-      - name: actors
-        image: trisberg/actors:0.0.1-SNAPSHOT
+      - name: images
+        image: trisberg/images:0.0.1-SNAPSHOT
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 80
@@ -354,21 +275,21 @@ spec:
       volumes:
       - name: application-config
         configMap:
-          name: actors 
+          name: images 
           items:
           - key: application.yaml 
             path: application.yaml
 ----
 +
-.config/actors-config.yaml
+.config/images-config.yaml
 [source,yaml]
 ----
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: actors
+  name: images
   labels:
-    app: actors
+    app: images
 data:
   application.yaml: |-
     security:
@@ -384,7 +305,13 @@ data:
         validationQuery: "SELECT 1"
 ----
 
-==== Deploy app on Kubernetes and test
+==== Deploy app to Kubernetes and test
+
+. Check that the MySQL service is running
++
+----
+kubectl get all -l app=mysql
+----
 
 . Build app and Docker image
 +
@@ -407,15 +334,14 @@ kubectl apply -f config/
 $ kubectl get all
 ----
 
-. Add some actor records
+. Add some image records
 +
 We need to look up the IP address of the service and then POST some data to it and test retreiving them:
 +
 [source,bash]
 ----
-export ACTORS_URL="$(minikube service actors --url)"
-curl -i -X POST -H "Content-Type:application/json" -d "{  \"name\" : \"Dolph Lundgren\",  \"age\" : 59 }" $ACTORS_URL/actors
-curl -i -X POST -H "Content-Type:application/json" -d "{  \"name\" : \"Jack Nicholson\",  \"age\" : 80 }" $ACTORS_URL/actors
-curl -i -X POST -H "Content-Type:application/json" -d "{  \"name\" : \"Meryl Streep\",  \"age\" : 68 }" $ACTORS_URL/actors
-curl $ACTORS_URL/actors
+export IMAGES_URL="$(minikube service images --url)"
+curl -i -X POST -H "Content-Type:application/json" -d "{  \"url\" : \"https://www.evolutionary.org/wp-content/uploads/2014/04/Dolph-Lundgren-boxer-197x300.jpg\", \"name\" : \"Dolph Lundgren\",  \"size\" : 13923 }" $IMAGES_URL/images
+curl $IMAGES_URL/images
 ----
+
