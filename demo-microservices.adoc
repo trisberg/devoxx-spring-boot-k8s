@@ -4,8 +4,9 @@ This demo has three parts
 
 1. link:demo-actors.adoc[The Actors Microservice]
 
-2. link:demo-images.adoc[The Images Microservice]
+2. TBD
 
-3. link:demo-api-gateway.adoc[The API Gateway]
+3. TBD
+
 
 
