@@ -1,4 +1,4 @@
-=== Demo - The Actors Microservice
+== Demo - Actors Microservice for Kubernetes
 
 A Simple REST Repository App for managing Actors
 

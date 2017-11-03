@@ -1,12 +1,5 @@
 == Demo - Spring Boot Microservices on Kubernetes
 
-This demo has three parts
-
-1. link:demo-actors.adoc[The Actors Microservice]
-
-2. TBD
-
-3. TBD
-
+See: https://github.com/trisberg/boot-k8s-microservices/blob/devoxx-2017/README.adoc[]
 
 

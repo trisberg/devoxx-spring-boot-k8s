@@ -1,4 +1,6 @@
-== Demo - Simple Hello Spring Boot app deployment on Minikube
+== Demo - Hello App deployed on Kubernetes
+
+Simple Hello Spring Boot app deployment on Minikube
 
 ==== Start Minikube 
 
