@@ -357,7 +357,7 @@ spec:
           name: actors 
           items:
           - key: application.yaml 
-            path: application.yaml
+            path: application-kubernetes.yaml
 ----
 +
 .config/actors-config.yaml
