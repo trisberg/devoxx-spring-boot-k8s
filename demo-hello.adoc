@@ -25,7 +25,7 @@ unzip hello.zip
 cd hello
 ----
 
-NOTE: We are using the most recent release of Spring Boot 2.0 currently available.
+NOTE: We are using the most Spring Boot 2.0 M5, as of Nov 6 there is a new M6 milestone available.
 
 . Add a `@RestController` and a mapping for `/hello` (the bold parts are the additions):
 +
